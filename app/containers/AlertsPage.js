@@ -3,7 +3,11 @@ import Box from "../components/Box";
 import AlertRow from "../components/AlertRow";
 import { Link } from 'react-router';
 const log = require("../utils/logger.js")("AlertsPage");
-
+/*
+    TODO: Move the logic out of the AlertRow component to allow for not only
+    better code in general but also reusabilty and the ability to disallow
+    multiple sounds playing at once.
+ */
 export default class AlertsPage extends Component {
   constructor (props) {
     super(props);
@@ -30,10 +34,15 @@ export default class AlertsPage extends Component {
             <AlertRow name="Booster Cooldown" alertName="booster_cooldown" />
             <AlertRow name="Reached Destination" alertName="reached_destination" />
             <AlertRow name="Completed Education" alertName="completed_education" />
-            <AlertRow name="New Mail" alertName="new_mail" />
+            <AlertRow name="New Mail" alertName="new_message" />
             <AlertRow name="New Event" alertName="new_event" />
+            <AlertRow name="New Competition" alertName="new_event" />
+            <AlertRow name="New Award" alertName="new_award" />
             <AlertRow name="Left Hospital" alertName="left_hospital" />
             <AlertRow name="Left Jail" alertName="left_jail" />
+            <AlertRow name="Low Health" alertName="low_health" />
+            <AlertRow name="Race Complete" alertName="race_complete" />
+            <AlertRow name="Auction Outbid" alertName="auction_outbid" />
           </Box>
 
         </div>

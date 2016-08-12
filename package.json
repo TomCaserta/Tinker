@@ -104,7 +104,7 @@
     "css-modules-require-hook": "^4.0.0",
     "electron-debug": "^1.0.1",
     "electron-json-storage": "^2.0.0",
-    "electron-notify": "^0.1.0",
+    "electron-notify": "TomCaserta/electron-notify",
     "exists-file": "^2.1.0",
     "flat-ui": "^2.1.1",
     "font-awesome": "^4.6.3",

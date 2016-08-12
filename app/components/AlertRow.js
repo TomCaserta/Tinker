@@ -44,7 +44,7 @@ export default class AlertRow extends Component {
     }
     var soundOptions = [];
     for (var name in Sounds) {
-      soundOptions.push(<option value={name}>{name}</option>);
+      soundOptions.push(<option key={name} value={name}>{name}</option>);
     }
     var sound = null;
     if (this.state.play_request) {
@@ -52,7 +52,7 @@ export default class AlertRow extends Component {
       // just completely delete this project. Im just going to use this for now as its
       // immediately easier, but as soon as advanced alerts come in, just changing it for a non
       // rendered audio tag.
-      sound = <Sound  url={"./sounds/" + Sounds[this.state.sound]}
+      sound = <Sound key={"sound"} url={"./sounds/" + Sounds[this.state.sound]}
                       playStatus={Sound.status.PLAYING}
                       onLoading={() => { this.setState({ loading: true }); }}
                       onPlaying={() => { this.setState({ playing: true, loading: false }); }}

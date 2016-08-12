@@ -7,6 +7,7 @@ eNotify.setConfig({
     displayTime: 6000
 });
 
+
 export class AlertTracker {
   constructor (Config, TornAPI) {
     console.log("Alerts have been constructed!");
@@ -15,6 +16,7 @@ export class AlertTracker {
     this.userStream = null;
     this.canLoad = false;
     this.bindStartup();
+    this.previous = null;
 
   }
 
@@ -51,24 +53,31 @@ export class AlertTracker {
 // [1]      booster_cooldown: false,
 // [1]      new_event: true,
     if (this.userStream !== null) this.userStream.cancel();
-    this.userStream = this.api.user(null, ["bars", "notifications", "profile","education", "money", "cooldowns", "travel"]).watch(this.config.get("watch_time", 10),true);
+    this.userStream = this.api.user(null, ["bars", "notifications", "profile","education", "money", "cooldowns", "travel", "icons"]).watch({ interval: this.config.get("watch_time", 9) });
     this.userStream.onData((data) => {
-      if (data.get("energy.fulltime", 1) === null) {
-        this.makeAlert("Your energy is full", "Go out and use it!", this.config.get("alert.sound.full_energy", ""));
+      if (this.previous === null) {
+        this.previous = data;
+        return;
       }
+      var prev = this.previous;
+      this.previous = data;
+
     });
-
+    this.userStream.onError((data) => {
+      console.error(data);
+     });
   }
-
-  makeAlert (title, text, sound) {
-    var notification = {
-        title: title,
-        text: text,
-        // sound: path.join(__dirname, "/../sounds/"+Sounds[sound])
-    };
-    let audio = new global.window.Audio(path.join(__dirname, "/../sounds/"+Sounds[sound]));
-        audio.play();
-    eNotify.notify(notification);
-    console.log("Created Notification", notification);
-  }
+  //
+  // makeAlert (title, text, sound) {
+  //   var notification = {
+  //       title: title,
+  //       text: text,
+  //       volume: this.config.get("alert.sound.volume", 1),
+  //       sound: path.join(__dirname, "/../sounds/"+Sounds[sound])
+  //   };
+  //   // let audio = new global.window.Audio(path.join(__dirname, "/../sounds/"+Sounds[sound]));
+  //   //     audio.play();
+  //   eNotify.notify(notification);
+  //   console.log("Created Notification", notification);
+  // }
 }

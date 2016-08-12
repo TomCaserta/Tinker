@@ -13,6 +13,7 @@ class Logger {
   constructor (name) {
     this.setName(name);
     this.muted = false;
+    this.discard = false;
   }
 
   mute () {
@@ -23,6 +24,7 @@ class Logger {
     this.muted = false;
     return this;
   }
+
 
   hashCode(str) {
       var hash = 0;

@@ -24,6 +24,8 @@ export default class InformationPage extends Component {
       previousEventsUnseen: 0,
       previousMessagesUnread: 0
     };
+    this.eduData = null;
+    this.previousEducation = null;
   }
 
   componentWillUnmount () {
@@ -31,7 +33,7 @@ export default class InformationPage extends Component {
     this.mailEventStream.cancel();
   }
   componentDidMount () {
-    this.userStream = TornAPI.user(null, ["bars", "notifications", "profile","education", "money", "cooldowns", "travel"]).watch(10);
+    this.userStream = TornAPI.user(null, ["bars", "notifications", "profile","education", "money", "cooldowns", "travel", "icons"]).watch({ interval: 10 });
     this.userStream.onData((data) => {
       var toSet = {
 
@@ -47,6 +49,7 @@ export default class InformationPage extends Component {
       if (eduCurrent !== null || eduCurrent !== 0) {
         toSet.education_total= data.get("education_timeleft");
         this.fetchEducationFullTime ( data.get("education_current"));
+        this.previousEducation =  data.get("education_current");
       }
       else {
         toSet.education_total= 0;
@@ -67,16 +70,29 @@ export default class InformationPage extends Component {
   }
 
   fetchEducationFullTime (currID) {
-    TornAPI.torn(["education"], false, 86400).once().then((eduData) => {
+    log.info("Fetching current education time");
+    if (this.eduData === null) {
+      TornAPI.torn(["education"], false, { cacheOutdatedTimeout: 86400 }).once().then((eduData) => {
+        this.eduData = eduData;
+        this.updateEdu(currID);
+      });
+      return;
+    }
+    log.info("Updating education time", this.state.education_total, this.state.education_data);
+    this.updateEdu(currID);
+  }
 
-      var curr = eduData.get("education."+currID);
+  updateEdu (id) {
+    if (this.previousEducation !== id) {
+      var curr = this.eduData.get("education."+id);
+      log.info(curr);
       if (curr) {
         this.setState({ education_total: curr.duration, education_data: curr });
       }
       else {
           this.setState({ education_total: 1, education_data: {} });
       }
-    });
+    }
   }
 
   setMailEvents (data) {
@@ -102,7 +118,7 @@ export default class InformationPage extends Component {
   }
 
   checkMailsAndEvents (sel, force) {
-    return TornAPI.user(null, sel ?sel: ["events", "messages"], force);
+    return TornAPI.user(null, sel ?sel: ["events", "messages"], { forceUpdate: force});
   }
   getProxy () {
     // Simple proxy for when there is no UI data.
@@ -167,7 +183,7 @@ export default class InformationPage extends Component {
           </Box>
 
           <Box size="4">
-            <StatusBar className="ruled-row" name="Education"
+            <StatusBar className="ruled-row" name={this.state.education_data !== null ? this.state.education_data.name : "Education"}
                        value={this.state.education_total - uI.get("education_timeleft", 0)}
                        total={this.state.education_total}
                        fulltime={uI.get("education_timeleft")}

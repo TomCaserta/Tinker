@@ -198,6 +198,8 @@ export class IPCListener {
     if (message.hasOwnProperty("ID")) {
       ////console.log(message.ID, ...arguments);
       //event.returnValue = this.target[property](...args);
+      //
+      if (args === null) throw "Arguments cannot be null?";
       this.target[property](...args).then((...vals) => {
       //  //console.log("Got promise for", property, ...arguments);
          event.sender.send(this.getName(), { ID: message.ID, error: null, response: vals, property: property });

@@ -2,6 +2,10 @@ import {IPC_TYPES, IPCWrapper, IPCProxy, IPCListener} from "./IPCProxy.js";
 import {findInData, ResponseStream} from "../api/torn.js";
 /*
   todo: Completely refactor. This file is a mess.
+  The issue here is a lot of the "API" is duplicated
+  because some of it cannot be sent over using ipc or some of it
+  just doesnt make sense to do on the main thread except for the request
+  itself.
  */
 class APIWrapper extends IPCWrapper {
   constructor () {
@@ -28,21 +32,53 @@ class APIWrapper extends IPCWrapper {
   }
   wrapResponse () { throw "Method not implemented";  }
   request (target, proxy, ipcRenderer, receiver) {
-    return (member, entityID, selections, forceUpdate, maxTimeOutdated) => {
+    return (options) => {
       //target, prop, receiver
-      return proxy.doPromise(target, "request", receiver)(member, entityID, selections, forceUpdate, maxTimeOutdated, false).then((resp) => {
+      if (options === null) {
+        options = this.applyDefaults({}, {});
+        console.warn("No arguments to request on the IPC proxy was found. Ensure you have not made a mistake. This will unlikely do what you want it to do.");
+      }
+      return proxy.doPromise(target, "request", receiver)(target.applyDefaults(target, proxy, ipcRenderer, receiver)(options, { wrap: false})).then((resp) => {
         resp = resp[0];
-        resp.get = findInData.bind(null, resp.raw);
+        if (options.wrap) {
+          resp.get = findInData.bind(null, resp.raw);
+        }
         return resp;
       });
     };
   }
+
+
+  applyDefaults (target, proxy, ipcRenderer, receiver) {
+    return (input, current) => {
+      if (input === null || typeof input === "undefined") input = {};
+      if (current === null || typeof current === "undefined") current = {};
+      var defaults = {
+        "member": null,
+        "entityID": null,
+        "selections": [],
+        "forceUpdate": false,
+        "cacheOutdatedTimeout": null,
+        "interval": null,
+        "wrap": true,
+        ...current,
+        ...input
+      };
+      return defaults;
+    };
+  }
+
   __clientReceiver_request (message, proxy, ipcReceiver, listener) {
     //console.log("Received response from IPC");
+
+    console.trace();
     return proxy.resolvePromise(listener, message);
   }
   __hostSender_request (property, args, message, event, wrapper, target, ipcMain, listener) {
     //console.log("Sending promise data from host");
+    //
+  //  console.log(args);
+  //  console.trace();
     return listener.sendPromise(property, args, message, event);
   }
   // onChange (target, proxy, ipcRenderer) {}
@@ -52,66 +88,74 @@ class APIWrapper extends IPCWrapper {
   // __hostSender_onChange (property, args, message, event, wrapper, target, ipcMain) {}
   //
   make (target, proxy, ipcRenderer, receiver) {
-    return (member, entityID, selections, forceUpdate, maxTimeOutdated) => {
-      if (selections && !(selections instanceof Array)) {
-        selections = [selections];
-      }
+    return (options) => {
+
       return {
-        once: target.once(target, proxy, ipcRenderer, receiver).bind(this, member, entityID, selections, forceUpdate || null, maxTimeOutdated || null),
-        watch: target.watch(target, proxy, ipcRenderer, receiver).bind(this, member, entityID, selections, forceUpdate || null, maxTimeOutdated || null)
+        once: target.once(target, proxy, ipcRenderer, receiver).bind(target, options),
+        watch: target.watch(target, proxy, ipcRenderer, receiver).bind(target, options)
       };
     };
   }
 
+
   user (target, proxy, ipcRenderer, receiver) {
-    return (userID, selections, noUseCache, maxCacheTime) => {
-      return target.make(target, proxy, ipcRenderer, receiver)("user", userID, selections, noUseCache, maxCacheTime);
+    return (userID, selections, options) => {
+      return target.make(target, proxy, ipcRenderer, receiver)(target.applyDefaults(target, proxy, ipcRenderer, receiver)(options, { "entityID": userID,selections: selections, "member": "user" }));
     };
   }
 
   faction (target, proxy, ipcRenderer, receiver) {
-    return (factionID, selections, noUseCache, maxCacheTime) => {
-      return target.make(target, proxy, ipcRenderer, receiver)("faction", factionID, selections, noUseCache, maxCacheTime);
+    return (factionID, selections, options) => {
+      return target.make(target, proxy, ipcRenderer, receiver)(target.applyDefaults(target, proxy, ipcRenderer, receiver)(options, { "entityID": factionID, selections: selections, "member": "faction" }));
     };
   }
 
   property (target, proxy, ipcRenderer, receiver) {
-    return (propertyID, selections, noUseCache, maxCacheTime) => {
-      return target.make(target, proxy, ipcRenderer, receiver)("property", propertyID, selections, noUseCache, maxCacheTime);
+    return (propertyID, selections, options) => {
+      return target.make(target, proxy, ipcRenderer, receiver)(target.applyDefaults(target, proxy, ipcRenderer, receiver)(options, { "entityID": propertyID, selections: selections, "member": "property" }));
     };
   }
 
   company (target, proxy, ipcRenderer, receiver) {
-    return (companyID, selections, noUseCache, maxCacheTime) => {
-      return target.make(target, proxy, ipcRenderer, receiver)("company", companyID, selections, noUseCache, maxCacheTime);
+    return (companyID, selections, options) => {
+      return target.make(target, proxy, ipcRenderer, receiver)(target.applyDefaults(target, proxy, ipcRenderer, receiver)(options, { "entityID": companyID, selections: selections, "member": "company" }));
     };
   }
 
   market (target, proxy, ipcRenderer, receiver) {
-    return (itemID, selections, noUseCache, maxCacheTime) => {
-      return target.make(target, proxy, ipcRenderer, receiver)("market", itemID, selections, noUseCache, maxCacheTime);
+    return (itemID, selections, options) => {
+      return target.make(target, proxy, ipcRenderer, receiver)(target.applyDefaults(target, proxy, ipcRenderer, receiver)(options, { "entityID": itemID, selections: selections, "member": "market" }));
     };
   }
 
   torn (target, proxy, ipcRenderer, receiver) {
-    return (selections, noUseCache, maxCacheTime) => {
-      return target.make(target, proxy, ipcRenderer, receiver)("torn", null, selections, noUseCache, maxCacheTime);
+    return (selections, options) => {
+      return target.make(target, proxy, ipcRenderer, receiver)(target.applyDefaults(target, proxy, ipcRenderer, receiver)(options, { "entityID": null, selections: selections, "member": "torn" }));
     };
   }
 
+
+
   once (target, proxy, ipcRenderer, receiver) {
-    return (member, entityID, selections, forceUpdate, maxTimeOutdated) => {
-      return target.request(target, proxy, ipcRenderer, receiver)(member, entityID, selections, forceUpdate, maxTimeOutdated);
-    };
+    return (options, mergeOptions) => {
+      options = {...options, ...mergeOptions};
+      return target.request(target, proxy, ipcRenderer, receiver)({...options, wrap: false}).then((resp) => {
+        if (options.wrap) {
+          resp.get = findInData.bind(null, resp.raw);
+        }
+        return resp;
+      });
+    }
   }
 
 
   watch (target, proxy, ipcRenderer, receiver) {
     //  watch (member, entityID, selections, forceUpdate, maxTimeOutdated, interval, wrapFn) {
-    return (member, entityID, selections, forceUpdate, maxTimeOutdated, interval) => {
+    return (options, mergeOptions) => {
+      options = {...options, ...mergeOptions};
       //console.log("Received watch request...");
       var id = proxy.getRandomID();
-      var responseStream = new ResponseStream();
+      var responseStream = new ResponseStream(options);
       //console.log("Setting canceller");
       var canceller = function () {
         // log.info("Cancelled watcher", listeners);
@@ -127,23 +171,28 @@ class APIWrapper extends IPCWrapper {
       //console.log("Setting rs...");
       proxy.listeners.set(id, { "remove": false, "responseStream": responseStream });
       //console.log("Sending IPC request");
-      ipcRenderer.send(proxy.getName(),{ "ID": id, "property": "watch", "type": "begin", args: [member, entityID, selections, forceUpdate, maxTimeOutdated, interval, false] });
+      //
+      ipcRenderer.send(proxy.getName(),{ "ID": id, "property": "watch", "type": "begin", args: [{...options, wrap: false}] });
       //console.log("Sent!", { "ID": id, "property": "watch", "type": "begin", args: [member, entityID, selections, forceUpdate, maxTimeOutdated, false] });
       return responseStream;
     };
   }
   __clientReceiver_watch (message, proxy, ipcReceiver, listener) {
     var type = message.type;
-    var responseStream = proxy.listeners.get(message.ID);
+    var listener = proxy.listeners.get(message.ID);
     //console.log("Found listener", responseStream);
-    if (!responseStream) return;
+    if (!listener) return;
+    var rS = listener.responseStream;
     if (type == "response") {
       var resp = message.response[0];
-      resp.get = findInData.bind(null, resp.raw);
-      responseStream.responseStream.add(resp);
+      if (rS.options.wrap) {
+        resp.get = findInData.bind(null, resp.raw);
+      }
+
+      rS.add(resp);
     }
     else if (type == "error") {
-      responseStream.responseStream.addError(...message.response);
+      rS.addError(...message.response);
     }
   }
   __hostSender_watch (property, args, message, event, wrapper, target, ipcMain, listener) {

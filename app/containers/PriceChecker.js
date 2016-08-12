@@ -23,7 +23,7 @@ export default class PriceChecker extends Component {
     if (this.itemMarketWatcher) {
       this.itemMarketWatcher.cancel();
     }
-    this.itemMarketWatcher = TornAPI.market(id, ["itemmarket", "bazaar"]).watch(20);
+    this.itemMarketWatcher = TornAPI.market(id, ["itemmarket", "bazaar"]).watch({ interval: 60 });
     this.itemMarketWatcher.onData((data) => {
       this.setState({
         bazaarData: this.processItems(data.get("bazaar")),
@@ -59,7 +59,7 @@ export default class PriceChecker extends Component {
 
   componentDidMount () {
     log.info("Getting item data");
-    TornAPI.torn(["items"], false, 86400).once().then((data) => {
+    TornAPI.torn(["items"], false, { cacheOutdatedTimeout: 86400 }).once().then((data) => {
       var itemList = torn2Array(data.get("items")).map(function (item) {
 
         return {...item, value: item.key };

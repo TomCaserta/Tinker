@@ -7,7 +7,7 @@ const app = electron.app || electron.remote.app;
 const userData = app.getPath('userData');
 const fsRead =  denodeify(fs.readFile, Promise);
 const fsWrite =  denodeify(fs.writeFile, Promise);
-const log = require("../utils/logger.js")("Config");
+const log = require("../utils/logger.js")("Config").mute();
 
 export class Config {
 

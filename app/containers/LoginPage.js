@@ -58,7 +58,7 @@ export default class Login extends Component {
     return (
       <div className="login-box v-center col-sm-4 col-sm-offset-4">
         <div className="box-content">
-          {(this.state.error !== null ? <div className="alert alert-error">
+          {(this.state.error !== null ? <div className="alert alert-danger">
           {JSON.stringify(this.state.error)}
           </div>: "")}
           <div className="form-group">

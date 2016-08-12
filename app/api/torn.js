@@ -54,38 +54,56 @@ export class TornAPI {
     return API_URL + this.constructRoute(member,entityID) + "?key="+this.apiKey + (selections&&selections.length>0?"&selections="+selections.join(","):"");
   }
 
-  make (member, entityID, selections, forceUpdate, maxTimeOutdated) {
-    if (selections && !(selections instanceof Array)) {
-      selections = [selections];
+  applyDefaults (input, current) {
+    if (input === null || typeof input === "undefined") input = {};
+    if (current === null || typeof current === "undefined") current = {};
+    var defaults = {
+      "member": null,
+      "entityID": null,
+      "selections": [],
+      "forceUpdate": false,
+      "cacheOutdatedTimeout": null,
+      "interval": null,
+      "wrap": true,
+      ...current,
+      ...input
+    };
+    return defaults;
+  }
+
+  make (options) {
+    options = this.applyDefaults(options);
+    if (options.selections && !(options.selections instanceof Array)) {
+      options.selections = [options.selections];
     }
     return {
-      once: this.once.bind(this, member, entityID, selections, forceUpdate, maxTimeOutdated),
-      watch: this.watch.bind(this, member, entityID, selections, forceUpdate, maxTimeOutdated)
+      once: this.once.bind(this, options),
+      watch: this.watch.bind(this, options)
     };
   }
 
-  user (userID, selections, noUseCache, maxCacheTime) {
-    return this.make("user", userID, selections, noUseCache, maxCacheTime);
+  user (userID, selections, options) {
+    return this.make(this.applyDefaults(options, { "entityID": userID,selections: selections, "member": "user" }));
   }
 
-  faction (factionID, selections, noUseCache, maxCacheTime) {
-    return this.make("faction", factionID, selections, noUseCache, maxCacheTime);
+  faction (factionID, selections, options) {
+    return this.make(this.applyDefaults(options, { "entityID": factionID, selections: selections, "member": "faction" }));
   }
 
-  property (propertyID, selections, noUseCache, maxCacheTime) {
-    return this.make("property", propertyID, selections, noUseCache, maxCacheTime);
+  property (propertyID, selections, options) {
+    return this.make(this.applyDefaults(options, { "entityID": propertyID, selections: selections, "member": "property" }));
   }
 
-  company (companyID, selections, noUseCache, maxCacheTime) {
-    return this.make("company", companyID, selections, noUseCache, maxCacheTime);
+  company (companyID, selections, options) {
+    return this.make(this.applyDefaults(options, { "entityID": companyID, selections: selections, "member": "company" }));
   }
 
-  market (itemID, selections, noUseCache, maxCacheTime) {
-    return this.make("market", itemID, selections, noUseCache, maxCacheTime);
+  market (itemID, selections, options) {
+    return this.make(this.applyDefaults(options, { "entityID": itemID, selections: selections, "member": "market" }));
   }
 
-  torn (selections, noUseCache, maxCacheTime) {
-    return this.make("torn", null, selections, noUseCache, maxCacheTime);
+  torn (selections, options) {
+    return this.make(this.applyDefaults(options, { "entityID": null, selections: selections, "member": "torn" }));
   }
 
   getCache (member, entityID, selections, maxTimeOutdated) {
@@ -128,7 +146,7 @@ export class TornAPI {
     return false;
   }
 
-  addCache (member, entityID, selections, responseData) {
+  addCache (member, entityID, selections, responseData, originalRequest) {
     var cacheKey = this.constructRoute(member, entityID);
     if (!this.cache.hasOwnProperty(cacheKey)) {
     this.cache[cacheKey] = {};
@@ -139,20 +157,30 @@ export class TornAPI {
     var selKey =selections.sort().join(",");
     this.cache[cacheKey][selKey] = {
         timestamp: Date.now(),
-        data: responseData
+        data: responseData,
+        originalRequest: originalRequest
     };
     return true;
   }
 
-  wrapResponse (data, fromCache, responseTime, wrapGet) {
-    var resp = { "raw": data, "fromCache": fromCache, "responseTime": responseTime };
-    if (wrapGet !== false) {
-      resp.get = findInData.bind(null, data);
-    }
+  wrapResponse (data, fromCache, responseTime, options) {
+    var resp = { "raw": data, "fromCache": fromCache, "responseTime": responseTime, originalRequest: options};
     return resp;
   }
 
-  request(member, entityID, selections, forceUpdate, maxTimeOutdated, wrapFn) {
+  request(options) {
+    if (options === null) {
+      options = this.applyDefaults({}, {});
+      console.trace();
+      console.warn("No arguments to request was found. Ensure you have not made a mistake. This will unlikely do what you want it to do.");
+    }
+    let member = options.member;
+    let entityID = options.entityID;
+    let selections = options.selections;
+    let wrapFn = options.wrap;
+    let maxTimeOutdated = options.cacheOutdatedTimeout;
+    let forceUpdate = options.forceUpdate;
+
     log.info("Requested", ...arguments);
     if (maxTimeOutdated === null || typeof maxTimeOutdated === "undefined") {
       maxTimeOutdated = 30;
@@ -161,7 +189,7 @@ export class TornAPI {
     if (forceUpdate !== true) {
       var cacheData = this.getCache(member, entityID, selections, maxTimeOutdated);
       if (cacheData !== false) {
-        return Promise.resolve(this.wrapResponse(cacheData.data, true, cacheData.timestamp,wrapFn));
+        return Promise.resolve(this.wrapResponse(cacheData.data, true, cacheData.timestamp, cacheData.originalRequest));
       }
     }
     return fetch(URL).then((body) => {
@@ -173,13 +201,24 @@ export class TornAPI {
         if (jsonData.hasOwnProperty("error")) {
           throw jsonData.error;
         }
-        this.addCache(member, entityID, selections, jsonData);
-        return this.wrapResponse(jsonData, false, Date.now(), wrapFn);
+        this.addCache(member, entityID, selections, jsonData, options);
+        return this.wrapResponse(jsonData, false, Date.now(), options);
     });
   }
 
-  once (member, entityID, selections, forceUpdate, maxTimeOutdated, wrapFn) {
-    return this.request(member, entityID, selections, forceUpdate, maxTimeOutdated, wrapFn);
+  once (options, mergeOptions) {
+
+      options = {...options, ...mergeOptions};
+    if (options === null) {
+      options = this.applyDefaults({}, {});
+      console.warn("No arguments to once was found. Ensure you have not made a mistake. This will unlikely do what you want it to do.");
+    }
+    return this.request(options).then(function (response) {
+      if (options.wrap === true) {
+        response.get = findInData.bind(null, response.raw);
+      }
+      return response;
+    });
   }
 
   _getListeners (member, entityID, selections) {
@@ -214,46 +253,82 @@ export class TornAPI {
         for (var n = 0; n < listeners[sel].length; n++) {
           var rS = listeners[sel][n];
           if (isError) {
-            rS.addError(data);
+            try {
+              rS.addError(data);
+            }
+            catch (e) {
+              // Well our error handler is erroring, we should display an error
+              // or something to inform the user why something may not be working
+              const {dialog} = require('electron')
+              dialog.showMessageBox({
+                type: "error",
+                title: "An error has occurred...",
+                message: "Tinker may behave unexpectedly, an error has occurred in the error handler (unfortunately). Please post the details to a developer in order to fix this issue. If you think you did something to cause this error (unlikely) then please post what you did to further help. Sorry!",
+                detail: e,
+                buttons: ["Okay"]
+              });
+            }
           }
           else {
-            // TODO: Fix properly.
-            if (rS.wrapFn === true) {
-            //  console.log("Wrapping data");
-                data.get = findInData.bind(null, data);
+            try {
+              // TODO: Fix properly.
+              let d;
+              if (rS.options.wrap === true) {
+              //  console.log("Wrapping data");
+                d =  {...data, "get": findInData.bind(null, data.raw)};
+              }
+              else {
+              //  console.log("Not wrrapping data", rS.options);
+                d =  {...data, "get": null};
+              }
+              rS.add(d);
             }
-            else {
-            //  console.log("Not wrrapping data", rS.wrapFn);
-              data.get = null;
+            catch (e) {
+              rS.addError(e);
             }
-            rS.add(data);
           }
         }
       }
     }
   }
 
-  watch (member, entityID, selections, forceUpdate, maxTimeOutdated, interval, wrapFn) {
+  watch (options, mergeOptions) {
+
+      options = {...options, ...mergeOptions};
+    if (options === null) {
+      options = this.applyDefaults({}, {});
+      console.warn("No arguments to watch was found. Ensure you have not made a mistake. This will unlikely do what you want it to do.");
+    }
+
+
+    let member = options.member;
+    let entityID = options.entityID;
+    let selections = options.selections;
+
     var listenKey = this.constructRoute(member, entityID);
     var listeners = this._getListeners(member, entityID,selections);
-    var responseStream = new ResponseStream(wrapFn);
+    var responseStream = new ResponseStream(options);
+
+    if (options.interval <= 1) {
+      options.interval  = 100;
+      responseStream.addError("No interval specified for watch, interval is set to 100 by default");
+    }
+
+    let interval = options.interval;
+
+    if (options.cacheOutdatedTimeout === null) {
+      options.cacheOutdatedTimeout = interval;
+    }
+
     var timeoutFunction = () => {
       log.info("Getting selections: ", selections);
-      this.once(member, entityID, selections, forceUpdate, maxTimeOutdated, wrapFn).then((responseData) => {
+      this.once(options).then((responseData) => {
         this.notifyAll(listenKey, selections, responseData, false);
       }).catch((error) => {
-        console.log("Error!", error);
         this.notifyAll(listenKey, selections, error, true);
       });
     };
-    if (interval <= 1) {
-      interval = 100;
-      console.warn("Interval lower than 1, set to 100 seconds");
-    }
-    if (maxTimeOutdated === null || typeof maxTimeOutdated==="undefined") {
-      maxTimeOutdated = interval - 1;
-    }
-    log.info("Interval is",interval);
+
     var canceller = function () {
       log.info("Cancelled watcher", listeners);
       var index = listeners.indexOf(responseStream);
@@ -274,7 +349,7 @@ export class TornAPI {
 
 export class ResponseStream {
 
-  constructor (wrapFn) {
+  constructor (requestOptions) {
     this._cancelMethod = null;
     this._isCancelled = false;
     this._onDataCallback = null;
@@ -282,7 +357,7 @@ export class ResponseStream {
     this.lastData = null;
     this.lastDataTime = 0;
     this.lastError = null;
-    this.wrapFn = wrapFn;
+    this.options = requestOptions;
   }
 
   _setCanceller (method) {
