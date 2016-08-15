@@ -1,4 +1,4 @@
-# TornTools
+# Tinker
 
 > Fast, beautiful torn API watcher
 
