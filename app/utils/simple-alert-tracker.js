@@ -1,7 +1,8 @@
 var eNotify = require('electron-notify');
-var path = require("path");
 import {Sounds} from "./Sounds";
+import {Alerts} from "../alerts/Alerts";
 
+var path = require("path");
 eNotify.setConfig({
     appIcon: path.join(__dirname, '/../images/icon_128x128.png'),
     displayTime: 6000
@@ -55,29 +56,24 @@ export class AlertTracker {
     if (this.userStream !== null) this.userStream.cancel();
     this.userStream = this.api.user(null, ["bars", "notifications", "profile","education", "money", "cooldowns", "travel", "icons"]).watch({ interval: this.config.get("watch_time", 9) });
     this.userStream.onData((data) => {
-      if (this.previous === null) {
-        this.previous = data;
-        return;
-      }
       var prev = this.previous;
+      if (prev === null) prev = data;
       this.previous = data;
 
+      Alerts.forEach((alert) => {
+        if (this.config.get("alert."+alert.getKey(), false)) {
+          if (alert.check(data, prev)) {
+            this.makeAlert(alert.alertMessage(this.config, data, prev));
+          }
+        }
+      });
     });
     this.userStream.onError((data) => {
       console.error(data);
      });
   }
-  //
-  // makeAlert (title, text, sound) {
-  //   var notification = {
-  //       title: title,
-  //       text: text,
-  //       volume: this.config.get("alert.sound.volume", 1),
-  //       sound: path.join(__dirname, "/../sounds/"+Sounds[sound])
-  //   };
-  //   // let audio = new global.window.Audio(path.join(__dirname, "/../sounds/"+Sounds[sound]));
-  //   //     audio.play();
-  //   eNotify.notify(notification);
-  //   console.log("Created Notification", notification);
-  // }
+
+  makeAlert (notification) {
+    eNotify.notify(notification);
+  }
 }

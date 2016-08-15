@@ -1,0 +1,97 @@
+:global(#desktop > #root) {
+  width: 100vw;
+  height: 100vh;
+}
+
+:global(#desktop) {
+  padding: 0px;
+  margin: 0px;
+  font-family: "Raleway", Helvetica;
+  boz-sizing: border-box;
+
+}
+
+:global(*) {
+  /*border: 1px solid red;*/
+}
+
+.barContainer {
+  -webkit-backface-visibility: hidden;
+-webkit-transform-style: preserve-3d;
+  transform: perspective(10px) rotateZ(-1deg);
+  position: absolute;
+  padding: 15px;
+  width: 500px;
+  height: auto;
+  top: 100px;
+  left: 100px;
+  border: 2px transparent solid;
+  border-top-color: white;
+  border-left-color: white;
+}
+
+.barContainer:after {
+  position: absolute;
+  content: " ";
+  display: block;
+  bottom: 0px;
+  right: 0px;
+  width: 50%;
+  height: 50%;
+  border: 2px transparent solid;
+  border-bottom-color: white;
+  border-right-color: white;
+}
+
+
+.barFull {
+  height: 20px;
+  border: 2px solid white;
+  padding: 2px;
+}
+.barLabel {
+  position: absolute;
+  color: white;
+  mix-blend-mode: difference;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 11px;
+  font-size: 0.7em;
+  font-weight: 300;
+  text-transform: uppercase;
+}
+.barValue {
+  height: 100%;
+  background: repeating-linear-gradient(
+    45deg,
+    white,
+    white 10px,
+    #fefefe 10px,
+    #fefefe  20px
+  );
+
+  background-color: white;
+}
+.bar {
+  margin-top: 7.5px;
+  margin-bottom: 7.5px;
+  position: relative;
+  width: 100%;
+
+}
+
+.leftContainer {
+  position: absolute;
+  bottom: 100px;
+  left: 100px;
+}
+
+.timeContainer {
+  font-size: 5em;
+  color: white;
+  font-weight: 100;
+  padding-left: 20px;
+  padding-right: 20px;
+  text-align: center;
+  border-bottom: 2px solid white;
+}

@@ -177,6 +177,9 @@ export class TornAPI {
     let member = options.member;
     let entityID = options.entityID;
     let selections = options.selections;
+    if (!Array.isArray(selections)) {
+      selections = [selections];
+    }
     let wrapFn = options.wrap;
     let maxTimeOutdated = options.cacheOutdatedTimeout;
     let forceUpdate = options.forceUpdate;

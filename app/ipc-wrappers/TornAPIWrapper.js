@@ -71,14 +71,15 @@ class APIWrapper extends IPCWrapper {
   __clientReceiver_request (message, proxy, ipcReceiver, listener) {
     //console.log("Received response from IPC");
 
-    console.trace();
+    // console.log("Message", message);
+    // console.trace();
     return proxy.resolvePromise(listener, message);
   }
   __hostSender_request (property, args, message, event, wrapper, target, ipcMain, listener) {
     //console.log("Sending promise data from host");
     //
-  //  console.log(args);
-  //  console.trace();
+    // console.log("Arguments", args);
+    // console.trace();
     return listener.sendPromise(property, args, message, event);
   }
   // onChange (target, proxy, ipcRenderer) {}

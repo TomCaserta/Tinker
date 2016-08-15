@@ -53,7 +53,7 @@ app.on('ready', async () => {
   var handleRedirect = (e, url) => {
     if(url != mainWindow.webContents.getURL()) {
       e.preventDefault()
-      require('electron').shell.openExternal(url)
+      shell.openExternal(url)
     }
   }
 
@@ -62,9 +62,10 @@ app.on('ready', async () => {
   mainWindow.webContents.on('did-finish-load', () => {
     mainWindow.show();
     mainWindow.focus();
-
-      var {AlertTracker} = require("./app/utils/simple-alert-tracker");
-      var alertTracker = new AlertTracker(Config, TornAPI);
+    const {AlertTracker} = require("./app/utils/simple-alert-tracker");
+    const {spawnDesktop} = require("./app/utils/spawn-desktop");
+    var alertTracker = new AlertTracker(Config, TornAPI);
+    spawnDesktop(Config, TornAPI);
   });
 
   mainWindow.on('closed', () => {

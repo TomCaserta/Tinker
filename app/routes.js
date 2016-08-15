@@ -9,6 +9,7 @@ import InformationPage from './containers/InformationPage';
 import PriceChecker from './containers/PriceChecker';
 import AlertsPage from './containers/AlertsPage';
 import TravelRun from './containers/TravelRun';
+import StockAlerts from './containers/StockAlerts';
 // import Faction from './containers/Faction';
 // import Desktop from './containers/Desktop';
 import SettingsPage from './containers/SettingsPage';
@@ -23,8 +24,7 @@ export default (
       <Route path="/price-checker" component={PriceChecker} />
       <Route path="/travel-run" component={TravelRun} />
       <Route path="/alerts" component={AlertsPage} />
-      <Route path="/faction" component={Faction} />
-      <Route path="/desktop" component={Desktop} />
+      <Route path="/stocks" component={StockAlerts} />
       <Route path="/settings" component={SettingsPage} />
     </Route>
   </Route>

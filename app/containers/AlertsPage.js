@@ -36,7 +36,7 @@ export default class AlertsPage extends Component {
             <AlertRow name="Completed Education" alertName="completed_education" />
             <AlertRow name="New Mail" alertName="new_message" />
             <AlertRow name="New Event" alertName="new_event" />
-            <AlertRow name="New Competition" alertName="new_event" />
+            <AlertRow name="New Competition" alertName="new_competition" />
             <AlertRow name="New Award" alertName="new_award" />
             <AlertRow name="Left Hospital" alertName="left_hospital" />
             <AlertRow name="Left Jail" alertName="left_jail" />
@@ -44,7 +44,6 @@ export default class AlertsPage extends Component {
             <AlertRow name="Race Complete" alertName="race_complete" />
             <AlertRow name="Auction Outbid" alertName="auction_outbid" />
           </Box>
-
         </div>
 
       </div>

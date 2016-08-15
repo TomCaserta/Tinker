@@ -9,11 +9,11 @@ class IconAlert extends SimpleAlert {
   }
 
   check (data, prev) {
-    if (alertOnPresence && data.get("icon.icon"+this.iconNumber,null) !== null && prev.get("icon.icon"+this.iconNumber,null) === null) {
-      this.message = data.get("icon.icon"+this.iconNumber,null);
+    if (this.alertOnPresence && data.get("icons.icon"+this.iconNumber,null) !== null && prev.get("icons.icon"+this.iconNumber,null) === null) {
+      this.message = data.get("icons.icon"+this.iconNumber,null);
       return true;
     }
-    else if (!alertOnPresence && prev.get("icon.icon"+this.iconNumber,null) !== null && data.get("icon.icon"+this.iconNumber,null) === null) {
+    else if (!this.alertOnPresence && prev.get("icons.icon"+this.iconNumber,null) !== null && data.get("icons.icon"+this.iconNumber,null) === null) {
       return true;
     }
     return false;

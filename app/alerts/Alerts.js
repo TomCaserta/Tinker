@@ -1,4 +1,5 @@
 import {StatusBarAlert} from "./StatusBarAlert";
+import {SimpleAlert} from "./SimpleAlert";
 import {NotificationAlert} from "./NotificationAlert";
 import {CooldownAlert} from "./CooldownAlert";
 import {IconAlert} from "./IconAlert";
@@ -9,7 +10,7 @@ export var Alerts = [
   new StatusBarAlert("nerve", "Your nerve is now full", "Use it wisely."),
   new StatusBarAlert("happy", "Your happy is full", "Time to train"),
   new NotificationAlert("mail", "New Notification!", "You've got mail!"),
-  new NotificationAlert("mail", "You have a new event", "EVENT_TEXT_HERE"),
+  new NotificationAlert("event", "You have a new event", ""),
   new NotificationAlert("award", "Congratulations", "You have a new award"),
   new NotificationAlert("competition", "A new competition has started", "Go check it out"),
   new CooldownAlert("drug", "Drug Cooldown", "Your drug effects have worn off."),

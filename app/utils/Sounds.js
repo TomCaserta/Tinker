@@ -1,10 +1,17 @@
-export const Sounds = 
+export const Sounds =
   {
     "Country": "Country ident.ogg",
     "Beat": "Beat ident.ogg",
     "Reggae": "Reggae ident.ogg",
     "Serious": "Serious ident.ogg",
     "Polka": "Polka ident.ogg",
+    "Charm": "charm.ogg",
+    "Ding": "ding.ogg",
+    "Noted": "noted.ogg",
+    "Notify": "notify.ogg",
+    "Random Keys": "random-keys.ogg",
+    "Success": "success.ogg",
+    "Wobble": "wobble.ogg",
     "Laser": "laser5.ogg",
     "Power Up": "powerUp1.ogg",
     "Re-power Up": "powerUp10.ogg",

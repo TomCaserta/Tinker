@@ -1,30 +1,16 @@
+/* Shared Imports */
 import React from 'react';
 import { render } from 'react-dom';
-import { Router, hashHistory } from 'react-router';
-import routes from './routes';
-import './app.global.css';
-import './flex.global.css';
-import {TornAPI} from "./api/torn.js";
-
 import {Wrapper as APIWrapper} from './ipc-wrappers/TornAPIWrapper.js';
 import {Wrapper as Configuration} from './ipc-wrappers/ConfigWrapper.js';
 
+/* Main Page Imports */
+import { Router, hashHistory } from 'react-router';
+import routes from './routes';
 
-if (typeof window !== "undefined") {
-  var global = window;
-}
-global.TornAPI = APIWrapper();
-global.Config = Configuration();
-console.log(Config.get("api_key"));
+/* Desktop Imports */
+import {Desktop} from "./desktop/components/Desktop";
 
-
-if (typeof window !== "undefined") {
-  window.addEventListener("unload", function () {
-    Config.save();
-  });
-
-}
-hashHistory.push("/");
 /**
  * Number.prototype.format(n, x)
  *
@@ -36,7 +22,32 @@ Number.prototype.format = function(n, x) {
     return this.toFixed(Math.max(0, ~~n)).replace(new RegExp(re, 'g'), '$&,');
 };
 
-render(
-    <Router history={hashHistory} routes={routes} />,
-  document.getElementById('root')
-);
+if (typeof window !== "undefined") {
+  var global = window;
+}
+global.TornAPI = APIWrapper();
+global.Config = Configuration();
+
+if (window.location.pathname.indexOf("desktop.html") === -1) {
+
+
+  if (typeof window !== "undefined") {
+    window.addEventListener("unload", function () {
+      Config.save();
+    });
+
+  }
+  hashHistory.push("/");
+
+
+  render(
+      <Router history={hashHistory} routes={routes} />,
+    document.getElementById('root')
+  );
+}
+else {
+  render(
+    <Desktop />,
+    document.getElementById('root')
+  );
+}
