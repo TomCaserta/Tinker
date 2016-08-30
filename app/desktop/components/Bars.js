@@ -10,7 +10,7 @@ export class Bars extends Component {
 
     return (<div className={barContainer}>
       <div className={bar}>
-        <div className={barLabel}>Energy</div>
+        <div className={barLabel}>Energy [50/150]</div>
         <div className={barFull}>
           <div className={barValue} style={{width: "40%"}}></div>
         </div>

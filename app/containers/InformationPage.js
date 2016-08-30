@@ -49,7 +49,6 @@ export default class InformationPage extends Component {
       if (eduCurrent !== null || eduCurrent !== 0) {
         toSet.education_total= data.get("education_timeleft");
         this.fetchEducationFullTime ( data.get("education_current"));
-        this.previousEducation =  data.get("education_current");
       }
       else {
         toSet.education_total= 0;
@@ -83,15 +82,17 @@ export default class InformationPage extends Component {
   }
 
   updateEdu (id) {
+  log.info("Current is now",this.previousEducation, id);
     if (this.previousEducation !== id) {
       var curr = this.eduData.get("education."+id);
-      log.info(curr);
+      log.info("Current is now", curr);
       if (curr) {
         this.setState({ education_total: curr.duration, education_data: curr });
       }
       else {
           this.setState({ education_total: 1, education_data: {} });
       }
+      this.previousEducation = id;
     }
   }
 
